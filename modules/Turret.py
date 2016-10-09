@@ -2,10 +2,11 @@
 
 import threading
 from time import sleep
-try:
-    from driver.Adafruit_PWM_Servo_Driver import PWM
-except ImportError:
-    from driver.monkeypatch import PWM
+import threading
+from time import sleep
+# ====================================
+#modified to use servo blaster - so that we dont need any PWM hardware thingy 
+import os
 
 # ===========================================================================
 # Wrapper for your servo driver goes here.
@@ -19,8 +20,8 @@ class ServoDriver :
     def __init__(self, cfg):
         # PWM settings
         FREQ = 60.0  # Set frequency to 60 Hz  
-        self.pwm = PWM(0x40, debug=False)      
-        self.pwm.setPWMFreq(FREQ)
+        #self.pwm = PWM(0x40, debug=False)      
+        #self.pwm.setPWMFreq(FREQ)
         pulseLength = 1000000                   # 1,000,000 us per second
         pulseLength /= FREQ                       # 60 Hz
         pulseLength /= 4096                     # 12 bits of resolution
@@ -31,10 +32,13 @@ class ServoDriver :
 
     def move(self, servo, position):  
         if -1 < position < 1:   #movement range -1...0...1
-            pulse = self.pulsecenter + (position*self.pulserange) 	# w/in range from middle
-            pulse *= self.pulseFactor		# ~120-600 at 60hz
-            self.pwm.setPWM(servo, 0, int(pulse))
-
+            #pulse = self.pulsecenter + (position*self.pulserange) 	# w/in range from middle
+            #pulse *= self.pulseFactor		# ~120-600 at 60hz
+            #self.pwm.setPWM(servo, 0, int(pulse))
+            #1) convert the -1 to +1 range to 50 to 250
+            angle = int(50 + (position * 100))
+            os.system("".join(["echo ", str(servo), "=", str(int(angle)), "  > /dev/servoblaster"]))
+#            print "".join(["echo ", str(servo), "=", str(int(angle)), "  > /dev/servoblaster"])
 
 class Countdown(threading.Thread):
     def __init__(self, seconds, event):
@@ -145,4 +149,4 @@ class Targetting(threading.Thread) :
                 self.stepxy[1] = self.deltaxy[1]/self.steps 
                 self.deltaxy = [0.0, 0.0]
                 self.stepcounter = self.steps
-                
+                 

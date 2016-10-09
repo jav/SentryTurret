@@ -1,8 +1,18 @@
 #!/usr/bin/python
 
-import threading
+import io
+import time
+import picamera
 import cv2
+import numpy as np
+import threading
 import datetime
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+
+
+resolution=(320, 240)
+framerate=32
 
 class Capture(threading.Thread) :
 
@@ -23,26 +33,31 @@ class Capture(threading.Thread) :
         
 
     def run(self):
+        # initialize the camera and grab a reference to the raw camera capture
+        camera = PiCamera()
+        camera.resolution = tuple(resolution)
+        camera.framerate = 15
+        rawCapture = PiRGBArray(camera, size=tuple(resolution))
+        print "[INFO] warming up..."
+        time.sleep(2)
+
         #loop to always get latest frame        
-        self.capture = cv2.VideoCapture(0)
-        self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.w) #TODO: does this work webcam?
-        self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.h)       
-        while True:
+        # capture frames from the camera
+        for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+            # grab the raw NumPy array representing the image and initialize
+            # the timestamp and occupied/unoccupied text
+            self.rawframe = f.array
             if self.stopped:
                 return
-            _, self.rawframe = self.capture.read()
+
+            #self.rawframe = self.rawframe[:, :, ::-1]
             self.frametime = datetime.datetime.now()        
+            rawCapture.truncate(0)
 
         
     def getFrame(self):
         frame = self.rawframe
         self.framecount = self.framecount + 1
-#        if self.scaledown != 1: 
-#            frame = cv2.resize(self.rawframe, (self.w, self.h)) #TODO: only if needed
-         #if cam mounted upside down, rotate 180
-        if self.upsidedown: #TODO: do this in display, but for coords with math
-            M = cv2.getRotationMatrix2D((self.w/2, self.h/2), 180, 1.0)
-            frame = cv2.warpAffine(frame, M, (self.w, self.h)) 
         return frame
     
     def getFPS(self): 
@@ -54,6 +69,7 @@ class Capture(threading.Thread) :
 			
     def quit(self):
 		self.stopped = True
-		self.capture.release()
+	        #TODO - i think we still need to release the stream..	
+                #self.capture.release()
 
 

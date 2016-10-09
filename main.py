@@ -187,8 +187,9 @@ def main() :
             if displaytext:
                 textsize = 0.003 * cam.w
                 cv2.putText(displayframe, displaytext, (5,cam.h-5), cv2.FONT_HERSHEY_SIMPLEX, textsize, (0,255,255))
-            cv2.imshow('display', displayframe)
-            cv2.waitKey(1)
+            if frame != None:
+                cv2.imshow('display', displayframe)
+                cv2.waitKey(1)
             
 
 # Command Handler --------------------------
