@@ -7,13 +7,15 @@ from time import sleep
 # ====================================
 #modified to use servo blaster - so that we dont need any PWM hardware thingy 
 import os
+#using servo blaster servo 1 and 4
+# start servo blaster with:
+
+#sudo /usr/src/PiBits/ServoBlaster/user/servod --idle-timeout=2000
 
 # ===========================================================================
 # Wrapper for your servo driver goes here.
 # move() is called with servo positions in range -1(left/down)...0(center)...1(right/up)
 #
-# This example implements Adafruit PWM servo driver from RaspberryPi
-# https://learn.adafruit.com/adafruit-16-channel-servo-driver-with-raspberry-pi
 # ===========================================================================
 class ServoDriver :
 
@@ -38,7 +40,7 @@ class ServoDriver :
             #1) convert the -1 to +1 range to 50 to 250
             angle = int(50 + (position * 100))
             os.system("".join(["echo ", str(servo), "=", str(int(angle)), "  > /dev/servoblaster"]))
-#            print "".join(["echo ", str(servo), "=", str(int(angle)), "  > /dev/servoblaster"])
+            #print "".join(["echo ", str(servo), "=", str(int(angle)), "  > /dev/servoblaster"])
 
 class Countdown(threading.Thread):
     def __init__(self, seconds, event):

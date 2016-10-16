@@ -107,7 +107,9 @@ def main() :
                 turret.sendTarget(turret.coordToPulse((cx,cy)), framexy)
         #targetting object (dlib) 
         if track.mode == 5: 
-            tracker.update(frame)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            confidence = tracker.update(gray)
+            print "confidence that we are still looking at the same target: " + str(confidence)
             rect = tracker.get_position()
             cx = (rect.right() + rect.left()) / 2
             cy = (rect.top() + rect.bottom()) / 2
@@ -144,7 +146,8 @@ def main() :
                         if x>3 and y>3: # and x+w<cam.w-3 and y+h<cam.h-3: #object inside frame #TODO: which sides?
                             points = (x,y,x+w,y+h)
                             tracker = dlib.correlation_tracker()
-                            tracker.start_track(frame, dlib.rectangle(*points))
+                            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                            tracker.start_track(gray, dlib.rectangle(*points))
                             displaytext = "Targetting object"
                             speak.say(displaytext)
                             track.mode = 5 #dlib
@@ -154,7 +157,8 @@ def main() :
         #face        
         elif track.mode == 1:            
             detector = dlib.get_frontal_face_detector()
-            faces = detector(frame)   
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = detector(gray)   
             best_area = 0
             best_face = None
             for d in faces:
@@ -167,8 +171,9 @@ def main() :
                 tracker = dlib.correlation_tracker()
                 tracker.start_track(frame, dlib.rectangle(*points))
                 displaytext = "Targetting human"
-                speak.say(displaytext)
+                #speak.say(displaytext)
                 track.mode = 5 #dlib
+                print "found a face.. now switching to mode 5"
                 #if face, go for shirt color
 #                xs = int(x + (x/2)) #shirt
 #                ys = int(y+(h*1.7)) #shirt                

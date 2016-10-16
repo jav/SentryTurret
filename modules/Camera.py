@@ -11,9 +11,6 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 
 
-resolution=(320, 240)
-framerate=32
-
 class Capture(threading.Thread) :
 
     def __init__(self, cfg):
@@ -25,6 +22,7 @@ class Capture(threading.Thread) :
         self.scaledown = float(cfg['camera']['scaledown']) 
         self.w = int(self.w / self.scaledown)
         self.h = int(self.h / self.scaledown)
+        self.resolution=(self.w, self.h)
         #for fps
         self.rawframe = None
         self.frametime = None
@@ -35,9 +33,9 @@ class Capture(threading.Thread) :
     def run(self):
         # initialize the camera and grab a reference to the raw camera capture
         camera = PiCamera()
-        camera.resolution = tuple(resolution)
+        camera.resolution = tuple(self.resolution)
         camera.framerate = 15
-        rawCapture = PiRGBArray(camera, size=tuple(resolution))
+        rawCapture = PiRGBArray(camera, size=tuple(self.resolution))
         print "[INFO] warming up..."
         time.sleep(2)
 
@@ -46,10 +44,16 @@ class Capture(threading.Thread) :
         for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
             # grab the raw NumPy array representing the image and initialize
             # the timestamp and occupied/unoccupied text
-            self.rawframe = f.array
+            frame = f.array
             if self.stopped:
                 return
 
+            #if cam mounted upside down, rotate 180
+            if self.upsidedown: #TODO: do this in display, but for coords with math
+                M = cv2.getRotationMatrix2D((self.w/2, self.h/2), 180, 1.0)
+                self.rawframe = cv2.warpAffine(frame, M, (self.w, self.h))
+            else:
+                self.rawframe=frame
             #self.rawframe = self.rawframe[:, :, ::-1]
             self.frametime = datetime.datetime.now()        
             rawCapture.truncate(0)
