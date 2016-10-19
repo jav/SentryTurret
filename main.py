@@ -13,7 +13,20 @@ import modules.Controller as Controller
 import modules.Timer as Timer
 import modules.Tracker as Tracker
 import modules.Turret as Turret
-    
+
+# PLAN
+#   create a new thing that ruins on my laptop using the webcam
+#   test the tracking of objects / motion / colour with it.
+#   ?
+#   profit
+
+#ideas:
+# target a specific colour only - find the biggest area and target that
+#  Hate people in red :)
+#  target a specific thing / shape - could put a marker on something for it to track.
+# could do both at the same time but with a definitive priority
+# maybe could find the biggest thing moving and target that too...
+#  (maybe switch to its colour or "object shape")
  
 # ===========================================================================
 # This is the main executable for the robot.

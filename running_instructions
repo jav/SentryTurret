@@ -1,0 +1,9 @@
+ assuming all git repos are in /usr/src/
+
+1) get the servoblaster demon running:
+sudo /usr/src/PiBits/ServoBlaster/user/servod
+
+2) start the service with:
+cd /usr/src/SentryTurret/
+sudo python ./main.py; stty sane
+
