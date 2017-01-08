@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
@@ -13,8 +13,8 @@ import modules.Controller as Controller
 import modules.Timer as Timer
 import modules.Tracker as Tracker
 import modules.Turret as Turret
-    
- 
+
+
 # ===========================================================================
 # This is the main executable for the robot.
 # ===========================================================================
@@ -27,7 +27,7 @@ def on_click(event, cx, cy, flag, param):
         coords = (cx,cy)
         newturr = turret.coordToPulse(coords)
         currturr = (turret.xy[0],turret.xy[1])
-        turret.sendTarget(newturr, currturr)   
+        turret.sendTarget(newturr, currturr)
     if(event==cv2.cv.CV_EVENT_MBUTTONDOWN):
         print "firing..."
         turret.fire()
@@ -39,10 +39,10 @@ def on_click(event, cx, cy, flag, param):
 from configobj import ConfigObj #this library supports writing/saving config
 cfg = ConfigObj(os.path.dirname(os.path.abspath(__file__)) + '/config.ini')
 
-     
-def main() :     
+
+def main() :
     global cam, turret
-    
+
     #start cam
     cam = Camera.Capture(cfg)
     cam.daemon = True
@@ -54,18 +54,18 @@ def main() :
         if cam.rawframe != None:
             break
     frame = cam.getFrame() #need during init
-    
+
     #start turret
     turret = Turret.Targetting(cfg)
     turret.daemon = True
     turret.recenter()
     turret.start()
-    
+
     #start controller
     cmdlistener = Controller.Listener(cfg)
     cmdlistener.startlisteners()
     key = ""
-    
+
     #display
     displaytext = "" #for writing message in window
     if os.environ.get('DISPLAY') and int(cfg['camera']['display']):
@@ -77,36 +77,36 @@ def main() :
     if display:
         cv2.namedWindow("display", cv2.cv.CV_WINDOW_AUTOSIZE)
         cv2.setMouseCallback("display", on_click, 0)
-    
+
     #tracking functions
     track = Tracker.Tracking(cfg, display)
     tracker = None #dlib object tracking
-    
+
     #motion detection
     avgframe = np.float32(frame)
     avgtimer = threading.Event() #TODO: put this in Timer thread?
-    
+
     #speak
     speak = Speak.Speak(cfg)
     speak.say("ready")
-    
+
     cam.resetFPS()
-    
+
     while(1):
-        
+
         #capture frame,position
         framexy = turret.xy
-        frame = cam.getFrame()     
+        frame = cam.getFrame()
         if display: #default display
             displayframe = frame
-            
+
         #targetting color (hsv)
-        if track.mode == 4: 
+        if track.mode == 4:
             cx,cy,displayframe = track.targetHsv(frame)
             if cx:
                 turret.sendTarget(turret.coordToPulse((cx,cy)), framexy)
-        #targetting object (dlib) 
-        if track.mode == 5: 
+        #targetting object (dlib)
+        if track.mode == 5:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             confidence = tracker.update(gray)
             print "confidence that we are still looking at the same target: " + str(confidence)
@@ -119,10 +119,10 @@ def main() :
                 pt2 = (int(rect.right()), int(rect.bottom()))
                 cv2.rectangle(displayframe, pt1, pt2, (255, 255, 255), 3)
         #detect motionhsv, motionobj
-        elif track.mode == 2 or track.mode == 3: 
+        elif track.mode == 2 or track.mode == 3:
             if avgtimer.isSet():
                 #learn image for motion detection
-                cv2.accumulateWeighted(frame, avgframe, 0.8) 
+                cv2.accumulateWeighted(frame, avgframe, 0.8)
                 resframe = cv2.convertScaleAbs(avgframe)
             else:
                 cnt, motionmask = track.getMotionContour(frame, resframe, track.areathresholdobject if track.mode==3 else track.areathresholdcolor)
@@ -154,11 +154,11 @@ def main() :
                             cam.resetFPS()
                         else:
                             cv2.rectangle(displayframe, (x, y), (x+w, y+h), (0,0,255), 2)
-        #face        
-        elif track.mode == 1:            
+        #face
+        elif track.mode == 1:
             detector = dlib.get_frontal_face_detector()
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = detector(gray)   
+            faces = detector(gray)
             best_area = 0
             best_face = None
             for d in faces:
@@ -176,7 +176,7 @@ def main() :
                 print "found a face.. now switching to mode 5"
                 #if face, go for shirt color
 #                xs = int(x + (x/2)) #shirt
-#                ys = int(y+(h*1.7)) #shirt                
+#                ys = int(y+(h*1.7)) #shirt
 #                framecenter = frame[ys-track.sampleradius:ys+track.sampleradius, xs-track.sampleradius:xs+track.sampleradius]
 #                framecenterhsv = cv2.cvtColor(framecenter, cv2.COLOR_BGR2HSV)
 #                track.hsvtarget = [int(cv2.mean(framecenterhsv)[0]), int(cv2.mean(framecenterhsv)[1]), int(cv2.mean(framecenterhsv)[2])]
@@ -186,7 +186,7 @@ def main() :
 #                track.mode = 4 #hsvtarget
 
 
-        
+
         #display frame
         if display:
             if displaytext:
@@ -195,17 +195,17 @@ def main() :
             if frame != None:
                 cv2.imshow('display', displayframe)
                 cv2.waitKey(1)
-            
+
 
 # Command Handler --------------------------
         if cmdlistener.cmdsent.isSet():
-            key = cmdlistener.cmd   
-            cmdlistener.reset()  
+            key = cmdlistener.cmd
+            cmdlistener.reset()
             #quit/restart
             if key=="?" or key=="h":
                 f = open(os.path.dirname(os.path.abspath(__file__)) + '/help.txt','r')
                 print(f.read())
-            elif key=="q" or key=="r": 
+            elif key=="q" or key=="r":
                 turret.quit()
                 cam.quit()
                 cmdlistener.quit()
@@ -218,14 +218,14 @@ def main() :
                 if key=="r":
                     speak.say("restarting")
                     return 1
-#--- Targeting ---            
+#--- Targeting ---
             elif key==" ":  #reset all
                 speak.say("Reset")
                 displaytext = ""
                 turret.armed = False
                 track.mode = 0
-                turret.recenter()  
-                cam.resetFPS()   
+                turret.recenter()
+                cam.resetFPS()
             elif key=="t": #sample center of image
                 sampleradius = 0.02 * (cam.w / float(cfg['camera']['scaledown']))
                 framecenter = frame[(cam.h/2)-sampleradius:(cam.h/2)+sampleradius, (cam.w/2)-sampleradius:(cam.w/2)+sampleradius]
@@ -236,7 +236,7 @@ def main() :
                 displaytext = "Targetting " + Speak.BGRname(track.bgrtarget)
                 speak.say(displaytext)
                 track.mode = 4
-                cam.resetFPS()  
+                cam.resetFPS()
             elif key=="1": #start face detect
                 displaytext = "Seeking humans."
                 speak.say(displaytext)
@@ -249,12 +249,12 @@ def main() :
                 Timer.Countdown(5, avgtimer).thread.start()
                 sleep(.1) #timer set
                 track.mode = int(key) #motiondetect
-#--- Controls ---                 
+#--- Controls ---
             elif key=="j": #joke/taunt
-                speak.taunt()            
+                speak.taunt()
             elif key=="g": #test fire
                 turret.fire()
-#--- Settings ---                  
+#--- Settings ---
             elif key=="i": #fps
                 print(cam.getFPS())
                 cam.resetFPS()
@@ -263,25 +263,25 @@ def main() :
                 if turret.armed:
                     speak.say("armed")
                 else:
-                    speak.say("disarmed")            
+                    speak.say("disarmed")
             elif key=="n": #toggle noisy
                 if speak.quiet:
                     speak.quiet = 0
                     speak.say("talking")
                 else:
                     speak.say("quiet")
-                    sleep(.1) 
+                    sleep(.1)
                     speak.quiet = 1
                 cfg['speak']['quiet'] = speak.quiet
             elif key=="+": #volume
                 speak.volume(.1)
                 speak.say("check")
-            elif key=="-": 
+            elif key=="-":
                 speak.volume(-.1)
-                speak.say("check")            
+                speak.say("check")
             elif key=="y": #restart speak
                 speak = Speak.Speak()
-                speak.say("ok")           
+                speak.say("ok")
             elif key=="w": #pause display
                 cam.resetFPS()
                 if not display and os.environ.get('DISPLAY') and int(cfg['camera']['display']):
@@ -291,7 +291,7 @@ def main() :
                     display = False
                     print("- display paused -")
 #--- Tolerance ---
-            else: 
+            else:
                 adjustpercent = 0.10 #step +/- percent for manual key adjustments
                 adjust = lambda val,sign: val * (1 + (sign*adjustpercent))
                 if key=="l" or key=="m": #target sensitivity
@@ -304,9 +304,8 @@ def main() :
                     track.areathresholdobject = adjust(track.areathresholdobject, 1 if key=="s" else -1)
                     cfg['tolerance']['objecttrack']['areathreshold'] = track.areathresholdobject
                 print "Area(Color):", track.areathresholdcolor, "Area(Object):", track.areathresholdobject, "Trigger:", turret.firesensitivity
-                    
-        
+
+
 if __name__ == "__main__" :
     #start
     sys.exit(main())
-    
