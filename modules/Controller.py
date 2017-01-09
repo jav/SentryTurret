@@ -1,10 +1,14 @@
 #!/usr/bin/python
 
+import logging
 import threading
 import bluetooth
 #import getch
 
 import fcntl, os, sys, termios
+
+logger = logging.getLogger(__name__ + '.Controller')
+
 
 def getch():
     fd = sys.stdin.fileno()     

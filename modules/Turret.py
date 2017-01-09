@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import threading
-from time import sleep
+import logging
 import threading
 from time import sleep
 # ====================================
@@ -11,6 +10,8 @@ import os
 # start servo blaster with:
 
 #sudo /usr/src/PiBits/ServoBlaster/user/servod --idle-timeout=2000
+
+logger = logging.getLogger(__name__ + '.Turret')
 
 # ===========================================================================
 # Wrapper for your servo driver goes here.

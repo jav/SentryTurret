@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import io
+import logging
 import time
 import picamera
 import cv2
@@ -10,6 +11,7 @@ import datetime
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
+logger = logging.getLogger(__name__ + '.Camera')
 
 class Capture(threading.Thread) :
 

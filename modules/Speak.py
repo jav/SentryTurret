@@ -3,9 +3,12 @@
 #sudo apt-get install espeak
 
 #import threading
+import logging
 import webcolors
 import pyttsx
 import random
+
+logger = logging.getLogger(__name__ + '.Speak')
 
 class Speak():
     def __init__(self, cfg):

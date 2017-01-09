@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
 import cv2
+import logging
 import numpy as np
 import math
+
+logger = logging.getLogger(__name__ + '.Tracker')
 
 class Tracking() :
 
